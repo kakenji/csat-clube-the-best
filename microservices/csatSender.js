@@ -1,0 +1,138 @@
+import { google } from 'googleapis';
+import dotenv from 'dotenv';
+dotenv.config();
+import { saveEmailToMongo } from './mongodb.js';
+
+const SERVER_URL = process.env.SERVER_URL;
+
+const SCOPES = [
+    'https://www.googleapis.com/auth/gmail.readonly', // apenas ler e-mails
+    'https://www.googleapis.com/auth/gmail.send'      // enviar e-mails
+];
+
+const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+);
+
+const gmail = google.gmail({ version: 'v1', auth: oauth2Client }); 
+
+oauth2Client.on('tokens', (tokens) => {
+    if(tokens.refresh_token){
+        console.log(tokens.refresh_token);
+    }
+    console.log(tokens.access_token);
+});
+
+const authUrl = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: SCOPES
+});
+
+console.log('LINK: ' + authUrl);
+
+
+await authenticateUser('4/0AVMBsJgLRTLuT6R38cldPX6wyEpwtEdDNUKMSK9IBULDZq0wkiG7GZ3VMjv_IvAvet-k6A');
+
+async function authenticateUser(code){
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+    console.log('Autenticação bem sucedida!');
+}
+
+
+// Função para codificar o e-mail em base64 para enviar pelo Gmail API
+function makeBody(to, subject, message) {
+    const str = [
+        `To: ${to}`,
+        'Content-Type: text/html; charset=UTF-8',
+        'MIME-Version: 1.0',
+        `Subject: ${subject}`,
+        '',
+        message
+    ].join('\n');
+
+    return Buffer.from(str)
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+// Função principal
+async function sendCSATEmails(labelName = 'csat') {
+    try {
+        // 1️⃣ Buscar todas as labels
+        const resLabels = await gmail.users.labels.list({ userId: 'me' });
+        const labels = resLabels.data.labels || [];
+        const label = labels.find(l => l.name.toLowerCase() === labelName.toLowerCase());
+        if (!label) return console.log(`Label "${labelName}" não encontrada.`);
+
+        // 2️⃣ Listar threads com essa label
+        const resThreads = await gmail.users.threads.list({
+            userId: 'me',
+            labelIds: [label.id],
+            maxResults: 50
+        });
+
+        const threads = resThreads.data.threads || [];
+        if (threads.length === 0) return console.log(`Nenhum e-mail encontrado com a label "${labelName}".`);
+
+        // 3️⃣ Para cada thread, pegar a primeira mensagem
+        for (const thread of threads) {
+            const resThread = await gmail.users.threads.get({
+                userId: 'me',
+                id: thread.id,
+                format: 'full'
+            });
+
+            const firstMessage = resThread.data.messages[0];
+            const headers = firstMessage.payload.headers;
+
+            const sender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
+            const subject = headers.find(h => h.name === 'Subject')?.value || '(Sem assunto)';
+
+            // Extrair body
+            let body = '';
+            const parts = firstMessage.payload.parts;
+            if (parts && parts.length > 0) {
+                const part = parts.find(p => p.mimeType === 'text/plain');
+                if (part?.body?.data) body = Buffer.from(part.body.data, 'base64').toString('utf-8');
+            } else if (firstMessage.payload.body?.data) {
+                body = Buffer.from(firstMessage.payload.body.data, 'base64').toString('utf-8');
+            }
+
+            // 4️⃣ Gerar links de feedback
+            const links = [];
+            for (let i = 1; i <= 5; i++) {
+                const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                links.push(`<a href="${url}">${['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'][i-1]}</a>`);
+            }
+
+            // 5️⃣ Montar mensagem HTML
+            const messageHTML = `
+                Olá! 😊<br><br>
+                Queremos saber como foi sua experiência com nosso atendimento.<br><br>
+                Como você avalia nosso atendimento?<br>
+                ${links.join(' | ')}<br><br>
+                Obrigado por nos ajudar a melhorar! 💛
+            `;
+
+            // 6️⃣ Enviar e-mail
+            const raw = makeBody(sender, `Feedback: ${subject}`, messageHTML);
+            await gmail.users.messages.send({
+                userId: 'me',
+                requestBody: { raw }
+            });
+
+            console.log(`✅ Mensagem enviada para ${sender}`);
+        }
+
+    } catch (err) {
+        console.error('Erro ao enviar e-mails CSAT:', err);
+    }
+}
+
+// Executa
+sendCSATEmails('csat');

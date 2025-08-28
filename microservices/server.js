@@ -1,0 +1,26 @@
+// server.js
+import express from 'express';
+import { saveEmailToMongo } from './mongo.js';
+
+const app = express();
+
+app.get('/feedback', async (req, res) => {
+    try {
+        const { nota, sender, subject, body } = req.query;
+        if (!nota || !sender || !subject) return res.status(400).send('Parâmetros inválidos');
+
+        await saveEmailToMongo({ sender, subject, body, date: new Date(), nota: Number(nota) });
+
+        // Página de agradecimento
+        res.send(`
+            <h2>Obrigado pelo seu feedback! 💛</h2>
+            <p>Sua avaliação foi registrada com sucesso.</p>
+        `);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao processar o feedback');
+    }
+});
+
+
+app.listen(3333, () => console.log('Servidor rodando na porta 3333'));

@@ -1,0 +1,27 @@
+import { MongoClient, ServerApiVersion } from 'mongodb';
+import dotenv from 'dotenv';
+dotenv.config();
+
+const uri = process.env.MONGO_URI;
+const client = new MongoClient(uri, {
+  serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true }
+});
+
+let db;
+
+async function connectDB() {
+    if (!db) {
+        await client.connect();
+        db = client.db("gmail_csat"); // seu banco
+        console.log("✅ Conectado ao MongoDB!");
+    }
+    return db;
+}
+
+async function saveEmailToMongo(email) {
+    const database = await connectDB();
+    const collection = database.collection('csat'); // sua "tabela"
+    await collection.insertOne(email);
+}
+
+module.exports = { saveEmailToMongo };
