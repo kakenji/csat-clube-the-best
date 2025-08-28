@@ -7,6 +7,10 @@ const PORT = process.env.PORT || 3000;
 
 const app = express();
 
+app.get('/', (req, res) => {
+    res.send('Hello World');
+})
+
 app.get('/feedback', async (req, res) => {
     try {
         const { nota, sender, subject, body } = req.query;
