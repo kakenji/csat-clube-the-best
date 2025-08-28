@@ -17,6 +17,7 @@ app.get('/feedback', async (req, res) => {
         if (!nota || !sender || !subject) return res.status(400).send('Parâmetros inválidos');
 
         await saveEmailToMongo({ sender, subject, body, date: new Date(), nota: Number(nota) });
+        console.log('Paramtros recebidos: ' + sender + subject)
 
         // Página de agradecimento
         res.send(`
