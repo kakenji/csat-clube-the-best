@@ -2,6 +2,8 @@
 import express from 'express';
 import { saveEmailToMongo } from './mongo.js';
 
+const PORT = process.env.PORT || 3000;
+
 const app = express();
 
 app.get('/feedback', async (req, res) => {
@@ -23,4 +25,4 @@ app.get('/feedback', async (req, res) => {
 });
 
 
-app.listen(3333, () => console.log('Servidor rodando na porta 3333'));
+app.listen(PORT, () => console.log('Servidor rodando na porta 3333'));

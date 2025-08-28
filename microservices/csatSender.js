@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import dotenv from 'dotenv';
 dotenv.config();
-import { saveEmailToMongo } from './mongodb.js';
+
 
 const SERVER_URL = process.env.SERVER_URL;
 
