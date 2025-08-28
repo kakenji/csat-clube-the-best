@@ -2,7 +2,6 @@ import { google } from 'googleapis';
 import dotenv from 'dotenv';
 dotenv.config();
 
-
 const SERVER_URL = process.env.SERVER_URL;
 
 const SCOPES = [
@@ -10,36 +9,30 @@ const SCOPES = [
     'https://www.googleapis.com/auth/gmail.send'      // enviar e-mails
 ];
 
+// Cria cliente OAuth2
 const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
+    process.env.GOOGLE_CLIENT_SECRET
 );
 
-const gmail = google.gmail({ version: 'v1', auth: oauth2Client }); 
+// Seta o refresh token direto do .env
+oauth2Client.setCredentials({
+    refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+});
 
+// Cria instância do Gmail API
+const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+// Opcional: logs de tokens
 oauth2Client.on('tokens', (tokens) => {
     if(tokens.refresh_token){
-        console.log(tokens.refresh_token);
+        console.log('Refresh token novo gerado (não usado no Render):', tokens.refresh_token);
     }
-    console.log(tokens.access_token);
+    console.log('Access token:', tokens.access_token);
 });
 
-const authUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES
-});
+// --- Seu código de envio de e-mails CSAT continua aqui ---
 
-console.log('LINK: ' + authUrl);
-
-
-await authenticateUser('4/0AVMBsJgLRTLuT6R38cldPX6wyEpwtEdDNUKMSK9IBULDZq0wkiG7GZ3VMjv_IvAvet-k6A');
-
-async function authenticateUser(code){
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
-    console.log('Autenticação bem sucedida!');
-}
 
 
 // Função para codificar o e-mail em base64 para enviar pelo Gmail API
