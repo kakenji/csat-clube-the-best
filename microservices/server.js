@@ -1,6 +1,7 @@
 // server.js
 import express from 'express';
-import { saveEmailToMongo } from './mongo.js';
+import { saveEmailToMongo } from './mongodb.js';
+import { sendCSATEmails } from './csatSender.js';
 
 const PORT = process.env.PORT || 3000;
 
@@ -21,6 +22,15 @@ app.get('/feedback', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao processar o feedback');
+    }
+});
+
+app.post('/send-csat', async (req, res) => {
+    try {
+        await sendCSATEmails('csat');
+        res.send('CSAT emails enviados!');
+    } catch (err) {
+        res.status(500).send('Erro ao enviar CSAT emails');
     }
 });
 

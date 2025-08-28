@@ -54,7 +54,7 @@ function makeBody(to, subject, message) {
 }
 
 // Função principal
-async function sendCSATEmails(labelName = 'csat') {
+export async function sendCSATEmails(labelName = 'csat') {
     try {
         // 1️⃣ Buscar todas as labels
         const resLabels = await gmail.users.labels.list({ userId: 'me' });
@@ -128,4 +128,4 @@ async function sendCSATEmails(labelName = 'csat') {
 }
 
 // Executa
-sendCSATEmails('csat');
+// sendCSATEmails('csat');

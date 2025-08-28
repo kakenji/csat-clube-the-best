@@ -18,10 +18,8 @@ async function connectDB() {
     return db;
 }
 
-async function saveEmailToMongo(email) {
+export async function saveEmailToMongo(email) {
     const database = await connectDB();
     const collection = database.collection('csat'); // sua "tabela"
     await collection.insertOne(email);
 }
-
-module.exports = { saveEmailToMongo };
