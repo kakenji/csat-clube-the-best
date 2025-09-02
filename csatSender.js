@@ -82,20 +82,16 @@ export async function sendCSATEmails(labelName = 'csat') {
                 id: thread.id, // agora thread.id existe
                 format: 'full'
             });
-            console.log('resThread.data:', resThread.data);
-            console.log('messages:'. resThread.data.messages);
-        }
-        let lastMessage;
-        let headers;
+            
+            const messages = resThreads.data.messages || [];
+            
+            if(messages.length === 0){ 
+                console.log('Thread sem mensagens, ignorando...');
+                continue;
+            }
 
-        const messages = resThreads.data.messages || [];
-
-        if(messages.length > 0){
-            lastMessage = messages[messages.length - 1]; // última mensagem
-            headers = lastMessage.payload.headers;
-        } else {
-            console.log('Thread sem mensagens, ignorando...');
-            return;
+            const lastMessage = messages[messages.length - 1];
+            const headers = lastMessage.payload.headers;
         }
 
         const sender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
