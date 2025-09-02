@@ -65,6 +65,14 @@ export async function sendCSATEmails(labelName = 'csat') {
         const label = labels.find(l => l.name.toLowerCase() === labelName.toLowerCase());
         if (!label) return console.log(`Label "${labelName}" não encontrada.`);
 
+        
+        const finalizadoLabel = labels.find(l => l.name.toLowerCase() === 'finalizado');
+        if (!finalizadoLabel) {
+            console.log('⚠️ Label "Finalizado" não encontrada. Crie ela manualmente no Gmail.');
+            return;
+        }
+
+
         // 2️⃣ Listar threads com essa label
         const resThreads = await gmail.users.threads.list({
             userId: 'me',
@@ -146,15 +154,14 @@ export async function sendCSATEmails(labelName = 'csat') {
             console.log(`✅ Resposta enviada para ${sender} na thread ${threadId}`);
 
             // 7️⃣ Mover a última mensagem da thread para "Finalizado"
-            const finalizadoLabel = labels.find(l => l.name === 'Finalizado');
-            if (finalizadoLabel) {
-                await gmail.users.messages.modify({
-                    userId: 'me',
-                    id: messageIdOriginal,
-                    requestBody: { addLabelIds: [finalizadoLabel.id] }
-                });
-                console.log(`📌 E-mail original movido para "Finalizado" (${messageIdOriginal})`);
-            }
+            
+            await gmail.users.messages.modify({
+                userId: 'me',
+                id: messageIdOriginal,
+                requestBody: { addLabelIds: [finalizadoLabel.id] }
+            });
+            console.log(`📌 E-mail original movido para "Finalizado" (${messageIdOriginal})`);
+
 
         }
 
