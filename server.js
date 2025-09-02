@@ -11,9 +11,6 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 })
 
-
-import { saveEmailToMongo } from './mongodb.js';
-
 app.get('/feedback', async (req, res) => {
     try {
         const { nota, sender, subject, body } = req.query;
