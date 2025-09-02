@@ -78,7 +78,7 @@ export async function sendCSATEmails(labelName = 'csat') {
         // 3️⃣ Para cada thread, pegar a última mensagem
         const resThread = await gmail.users.threads.get({
             userId: 'me',
-            id: thread.id,
+            id: threads.id,
             format: 'full'
         });
 
@@ -138,7 +138,7 @@ export async function sendCSATEmails(labelName = 'csat') {
         console.log(`✅ Resposta enviada para ${sender} na thread ${threadId}`);
 
         // 7️⃣ Mover a última mensagem da thread para "Finalizado"
-        const finalizadoLabel = labels.find(l => l.name.toLowerCase() === 'finalizado');
+        const finalizadoLabel = labels.find(l => l.name === 'Finalizado');
         if (finalizadoLabel) {
             await gmail.users.messages.modify({
                 userId: 'me',
