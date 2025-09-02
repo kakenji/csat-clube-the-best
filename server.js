@@ -1,6 +1,6 @@
 // server.js
 import express from 'express';
-import { saveEmailToMongo, checkIfFeedbackExists } from './mongodb.js';
+import { saveEmailToMongo } from './mongodb.js';
 import { sendCSATEmails } from './csatSender.js';
 
 const PORT = process.env.PORT || 3333;
