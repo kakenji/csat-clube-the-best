@@ -83,7 +83,7 @@ export async function sendCSATEmails(labelName = 'csat') {
                 format: 'full'
             });
             
-            const messages = resThreads.data.messages || [];
+            const messages = resThread.data.messages || [];
             
             if(messages.length === 0){ 
                 console.log('Thread sem mensagens, ignorando...');
