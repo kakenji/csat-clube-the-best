@@ -57,6 +57,14 @@ app.get('/feedback', async (req, res) => {
     }
 });
 
-
+app.post('/send-csat', async (req, res) => {
+    try {
+        await sendCSATEmails('csat');
+        res.send('CSAT emails enviados!');
+    } catch (err) {
+        res.status(500).send('Erro ao enviar CSAT emails');
+    }
+});
 
 app.listen(PORT, () => console.log('Servidor rodando na porta 3333'));
+
