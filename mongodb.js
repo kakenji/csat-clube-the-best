@@ -24,10 +24,3 @@ export async function saveEmailToMongo(email) {
     const collection = database.collection('csat'); // sua "tabela"
     await collection.insertOne(email);
 }
-
-
-export async function checkIfFeedbackExists(threadId) {
-    const database = await connectDB();
-    const collection = database.collection('csat');
-    return await collection.findOne({ threadId });
-}
