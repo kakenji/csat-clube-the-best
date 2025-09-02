@@ -20,7 +20,9 @@ app.get('/feedback', async (req, res) => {
         const subjectSafe = subject || "Sem assunto";
         const bodySafe = body || "Sem conteúdo";
 
-        // ✅ Salva no banco se ainda não existe
+        const exists = await collection.findOne({ sender, subject, nota });
+        if (exists) return;
+
         await saveEmailToMongo({
             sender,
             subject: subjectSafe,
