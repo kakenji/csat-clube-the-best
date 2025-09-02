@@ -122,12 +122,7 @@ export async function sendCSATEmails(labelName = 'csat') {
             const safeSubject = subject.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
             const safeBody = body.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
 
-            const links = [];
-            const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
-            for (let i = 1; i <= 5; i++) {
-                const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(safeSubject)}&body=${encodeURIComponent(safeBody)}`;
-                links.push(`<a href="${url}">${labelsCSAT[i-1]}</a>`);
-            }
+            
 
             // 5️⃣ Montar mensagem HTML
             const messageHTML = `
@@ -165,9 +160,13 @@ export async function sendCSATEmails(labelName = 'csat') {
                 }
             });
             console.log(`📌 E-mail original movido para "Finalizado" (${messageIdOriginal})`);
-
-
         }
+            const links = [];
+            const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
+            for (let i = 1; i <= 5; i++) {
+                const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(safeSubject)}&body=${encodeURIComponent(safeBody)}`;
+                links.push(`<a href="${url}">${labelsCSAT[i-1]}</a>`);
+            }
 
     } catch (err) {
         console.error('Erro ao enviar e-mails CSAT:', err);
