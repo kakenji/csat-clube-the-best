@@ -76,11 +76,13 @@ export async function sendCSATEmails(labelName = 'csat') {
         if (threads.length === 0) return console.log(`Nenhum e-mail encontrado com a label "${labelName}".`);
 
         // 3️⃣ Para cada thread, pegar a última mensagem
-        const resThread = await gmail.users.threads.get({
-            userId: 'me',
-            id: threads.id,
-            format: 'full'
-        });
+        for (const thread of threads) {
+            const resThread = await gmail.users.threads.get({
+                userId: 'me',
+                id: thread.id, // agora thread.id existe
+                format: 'full'
+            });
+        }
 
         const messages = resThread.data.messages;
         const lastMessage = messages[messages.length - 1]; // última mensagem
