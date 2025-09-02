@@ -36,12 +36,14 @@ oauth2Client.on('tokens', (tokens) => {
 
 
 // Função para codificar o e-mail em base64 para enviar pelo Gmail API
-function makeBody(to, subject, message) {
+function makeBody(to, subject, message, headers = {}) {
     const str = [
         `To: ${to}`,
         'Content-Type: text/html; charset=UTF-8',
         'MIME-Version: 1.0',
         `Subject: ${subject}`,
+        headers['In-Reply-To'] ? `In-Reply-To: ${headers['In-Reply-To']}` : '',
+        headers['References'] ? `References: ${headers['References']}` : '',
         '',
         message
     ].join('\n');
@@ -52,6 +54,7 @@ function makeBody(to, subject, message) {
         .replace(/\//g, '_')
         .replace(/=+$/, '');
 }
+
 
 // Função principal
 export async function sendCSATEmails(labelName = 'csat') {
@@ -126,10 +129,10 @@ export async function sendCSATEmails(labelName = 'csat') {
             if (finalizadoLabel) {
                 await gmail.users.messages.modify({
                     userId: 'me',
-                    id: messageId,
+                    id: firstMessage.id,   // <--- original, não o enviado
                     requestBody: { addLabelIds: [finalizadoLabel.id] }
                 });
-                console.log(`📌 E-mail movido para "Finalizado" (${messageId})`);
+                console.log(`📌 E-mail original movido para "Finalizado" (${firstMessage.id})`);
             }
         }
 
@@ -139,4 +142,4 @@ export async function sendCSATEmails(labelName = 'csat') {
 }
 
 // Executa
-sendCSATEmails('csat');
+// sendCSATEmails('csat');
