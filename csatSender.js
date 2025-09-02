@@ -101,10 +101,13 @@ export async function sendCSATEmails(labelName = 'csat') {
 
             // 4️⃣ Gerar links de feedback
             const links = [];
+            const labels = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
+
             for (let i = 1; i <= 5; i++) {
                 const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                links.push(`<a href="${url}">${['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'][i-1]}</a>`);
+                links.push(`<a href="${url}">${labels[i-1]}</a>`);
             }
+
 
             // 5️⃣ Montar mensagem HTML
             const messageHTML = `
