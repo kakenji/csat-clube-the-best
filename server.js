@@ -23,7 +23,7 @@ app.get('/feedback', async (req, res) => {
             sender, 
             subject: subjectSafe, 
             body: bodySafe, 
-            date: new Date(), 
+            date: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false }),
             nota: Number(nota) 
         });
         console.log('Paramtros recebidos: ' + sender + subject)
