@@ -125,7 +125,7 @@ export async function sendCSATEmails(labelName = 'csat') {
             const links = [];
             const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
             for (let i = 1; i <= 5; i++) {
-                const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(safeSubject)}&body=${encodeURIComponent(safeBody)}&threadId=${threadId}`;
+                const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(safeSubject)}&body=${encodeURIComponent(safeBody)}`;
                 links.push(`<a href="${url}">${labelsCSAT[i-1]}</a>`);
             }
 
