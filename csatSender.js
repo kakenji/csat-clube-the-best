@@ -6,7 +6,8 @@ const SERVER_URL = process.env.SERVER_URL;
 
 const SCOPES = [
     'https://www.googleapis.com/auth/gmail.readonly', // apenas ler e-mails
-    'https://www.googleapis.com/auth/gmail.send'      // enviar e-mails
+    'https://www.googleapis.com/auth/gmail.send',     // enviar e-mails
+    'https://www.googleapis.com/auth/gmail.modify'    // modificar e-mails
 ];
 
 // Cria cliente OAuth2
