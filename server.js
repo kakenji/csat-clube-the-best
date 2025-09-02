@@ -1,6 +1,6 @@
 // server.js
 import express from 'express';
-import { saveEmailToMongo } from './mongodb.js';
+import { saveEmailToMongo, checkIfFeedbackExists } from './mongodb.js';
 import { sendCSATEmails } from './csatSender.js';
 
 const PORT = process.env.PORT || 3333;
@@ -11,7 +11,6 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 })
 
-import { saveEmailToMongo, checkIfFeedbackExists } from './mongodb.js';
 
 app.get('/feedback', async (req, res) => {
     try {
