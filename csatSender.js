@@ -75,69 +75,79 @@ export async function sendCSATEmails(labelName = 'csat') {
         const threads = resThreads.data.threads || [];
         if (threads.length === 0) return console.log(`Nenhum e-mail encontrado com a label "${labelName}".`);
 
-        // 3️⃣ Para cada thread, pegar a primeira mensagem
-        for (const thread of threads) {
-            const resThread = await gmail.users.threads.get({
-                userId: 'me',
-                id: thread.id,
-                format: 'full'
-            });
+        // 3️⃣ Para cada thread, pegar a última mensagem
+        const resThread = await gmail.users.threads.get({
+            userId: 'me',
+            id: thread.id,
+            format: 'full'
+        });
 
-            const firstMessage = resThread.data.messages[0];
-            const headers = firstMessage.payload.headers;
+        const messages = resThread.data.messages;
+        const lastMessage = messages[messages.length - 1]; // última mensagem
+        const headers = lastMessage.payload.headers;
 
-            const sender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
-            const subject = headers.find(h => h.name === 'Subject')?.value || '(Sem assunto)';
+        const sender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
+        const subject = headers.find(h => h.name === 'Subject')?.value || '(Sem assunto)';
+        const messageIdOriginal = lastMessage.id; // para reply e label
+        const threadId = lastMessage.threadId;
 
-            // Extrair body
-            let body = '';
-            const parts = firstMessage.payload.parts;
-            if (parts && parts.length > 0) {
-                const part = parts.find(p => p.mimeType === 'text/plain');
-                if (part?.body?.data) body = Buffer.from(part.body.data, 'base64').toString('utf-8');
-            } else if (firstMessage.payload.body?.data) {
-                body = Buffer.from(firstMessage.payload.body.data, 'base64').toString('utf-8');
-            }
-
-            // 4️⃣ Gerar links de feedback
-            const links = [];
-            const labels = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
-
-            for (let i = 1; i <= 5; i++) {
-                const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                links.push(`<a href="${url}">${labels[i-1]}</a>`);
-            }
-
-
-            // 5️⃣ Montar mensagem HTML
-            const messageHTML = `
-                Olá! 😊<br><br>
-                Queremos saber como foi sua experiência com nosso atendimento.<br><br>
-                Como você avalia nosso atendimento?<br>
-                ${links.join(' | ')}<br><br>
-                Obrigado por nos ajudar a melhorar! 💛
-            `;
-
-            // 6️⃣ Enviar e-mail
-            const raw = makeBody(sender, `Feedback: ${subject}`, messageHTML);
-            await gmail.users.messages.send({
-                userId: 'me',
-                requestBody: { raw }
-            });
-
-            console.log(`✅ Mensagem enviada para ${sender}`);
-
-            // 7️⃣ Mover para "Finalizado"
-            const finalizadoLabel = labels.find(l => l.name.toLowerCase() === 'finalizado');
-            if (finalizadoLabel) {
-                await gmail.users.messages.modify({
-                    userId: 'me',
-                    id: firstMessage.id,   // <--- original, não o enviado
-                    requestBody: { addLabelIds: [finalizadoLabel.id] }
-                });
-                console.log(`📌 E-mail original movido para "Finalizado" (${firstMessage.id})`);
-            }
+        // Extrair body
+        let body = '';
+        const parts = lastMessage.payload.parts;
+        if (parts && parts.length > 0) {
+            const part = parts.find(p => p.mimeType === 'text/plain');
+            if (part?.body?.data) body = Buffer.from(part.body.data, 'base64').toString('utf-8');
+        } else if (lastMessage.payload.body?.data) {
+            body = Buffer.from(lastMessage.payload.body.data, 'base64').toString('utf-8');
         }
+
+        // 4️⃣ Gerar links de feedback (sanitize para evitar múltiplos)
+        const safeSubject = subject.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
+        const safeBody = body.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
+
+        const links = [];
+        const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
+        for (let i = 1; i <= 5; i++) {
+            const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(safeSubject)}&body=${encodeURIComponent(safeBody)}`;
+            links.push(`<a href="${url}">${labelsCSAT[i-1]}</a>`);
+        }
+
+        // 5️⃣ Montar mensagem HTML
+        const messageHTML = `
+            Olá! 😊<br><br>
+            Queremos saber como foi sua experiência com nosso atendimento.<br><br>
+            Como você avalia nosso atendimento?<br>
+            ${links.join(' | ')}<br><br>
+            Obrigado por nos ajudar a melhorar! 💛
+        `;
+
+        // 6️⃣ Enviar resposta na mesma thread
+        const raw = makeBody(sender, `Re: ${subject}`, messageHTML, {
+            'In-Reply-To': headers.find(h => h.name === 'Message-ID')?.value,
+            'References': headers.find(h => h.name === 'Message-ID')?.value
+        });
+
+        await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: {
+                raw,
+                threadId
+            }
+        });
+
+        console.log(`✅ Resposta enviada para ${sender} na thread ${threadId}`);
+
+        // 7️⃣ Mover a última mensagem da thread para "Finalizado"
+        const finalizadoLabel = labels.find(l => l.name.toLowerCase() === 'finalizado');
+        if (finalizadoLabel) {
+            await gmail.users.messages.modify({
+                userId: 'me',
+                id: messageIdOriginal,
+                requestBody: { addLabelIds: [finalizadoLabel.id] }
+            });
+            console.log(`📌 E-mail original movido para "Finalizado" (${messageIdOriginal})`);
+        }
+
 
     } catch (err) {
         console.error('Erro ao enviar e-mails CSAT:', err);
