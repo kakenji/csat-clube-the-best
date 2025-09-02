@@ -92,70 +92,71 @@ export async function sendCSATEmails(labelName = 'csat') {
 
             const lastMessage = messages[messages.length - 1];
             const headers = lastMessage.payload.headers;
-        }
+        
 
-        const sender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
-        const subject = headers.find(h => h.name === 'Subject')?.value || '(Sem assunto)';
-        const messageIdOriginal = lastMessage.id; // para reply e label
-        const threadId = lastMessage.threadId;
+            const sender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
+            const subject = headers.find(h => h.name === 'Subject')?.value || '(Sem assunto)';
+            const messageIdOriginal = lastMessage.id; // para reply e label
+            const threadId = lastMessage.threadId;
 
-        // Extrair body
-        let body = '';
-        const parts = lastMessage.payload.parts;
-        if (parts && parts.length > 0) {
-            const part = parts.find(p => p.mimeType === 'text/plain');
-            if (part?.body?.data) body = Buffer.from(part.body.data, 'base64').toString('utf-8');
-        } else if (lastMessage.payload.body?.data) {
-            body = Buffer.from(lastMessage.payload.body.data, 'base64').toString('utf-8');
-        }
-
-        // 4️⃣ Gerar links de feedback (sanitize para evitar múltiplos)
-        const safeSubject = subject.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
-        const safeBody = body.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
-
-        const links = [];
-        const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
-        for (let i = 1; i <= 5; i++) {
-            const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(safeSubject)}&body=${encodeURIComponent(safeBody)}`;
-            links.push(`<a href="${url}">${labelsCSAT[i-1]}</a>`);
-        }
-
-        // 5️⃣ Montar mensagem HTML
-        const messageHTML = `
-            Olá! 😊<br><br>
-            Queremos saber como foi sua experiência com nosso atendimento.<br><br>
-            Como você avalia nosso atendimento?<br>
-            ${links.join(' | ')}<br><br>
-            Obrigado por nos ajudar a melhorar! 💛
-        `;
-
-        // 6️⃣ Enviar resposta na mesma thread
-        const raw = makeBody(sender, `Re: ${subject}`, messageHTML, {
-            'In-Reply-To': headers.find(h => h.name === 'Message-ID')?.value,
-            'References': headers.find(h => h.name === 'Message-ID')?.value
-        });
-
-        await gmail.users.messages.send({
-            userId: 'me',
-            requestBody: {
-                raw,
-                threadId
+            // Extrair body
+            let body = '';
+            const parts = lastMessage.payload.parts;
+            if (parts && parts.length > 0) {
+                const part = parts.find(p => p.mimeType === 'text/plain');
+                if (part?.body?.data) body = Buffer.from(part.body.data, 'base64').toString('utf-8');
+            } else if (lastMessage.payload.body?.data) {
+                body = Buffer.from(lastMessage.payload.body.data, 'base64').toString('utf-8');
             }
-        });
 
-        console.log(`✅ Resposta enviada para ${sender} na thread ${threadId}`);
+            // 4️⃣ Gerar links de feedback (sanitize para evitar múltiplos)
+            const safeSubject = subject.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
+            const safeBody = body.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
 
-        // 7️⃣ Mover a última mensagem da thread para "Finalizado"
-        const finalizadoLabel = labels.find(l => l.name === 'Finalizado');
-        if (finalizadoLabel) {
-            await gmail.users.messages.modify({
-                userId: 'me',
-                id: messageIdOriginal,
-                requestBody: { addLabelIds: [finalizadoLabel.id] }
+            const links = [];
+            const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
+            for (let i = 1; i <= 5; i++) {
+                const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(safeSubject)}&body=${encodeURIComponent(safeBody)}`;
+                links.push(`<a href="${url}">${labelsCSAT[i-1]}</a>`);
+            }
+
+            // 5️⃣ Montar mensagem HTML
+            const messageHTML = `
+                Olá! 😊<br><br>
+                Queremos saber como foi sua experiência com nosso atendimento.<br><br>
+                Como você avalia nosso atendimento?<br>
+                ${links.join(' | ')}<br><br>
+                Obrigado por nos ajudar a melhorar! 💛
+            `;
+
+            // 6️⃣ Enviar resposta na mesma thread
+            const raw = makeBody(sender, `Re: ${subject}`, messageHTML, {
+                'In-Reply-To': headers.find(h => h.name === 'Message-ID')?.value,
+                'References': headers.find(h => h.name === 'Message-ID')?.value
             });
-            console.log(`📌 E-mail original movido para "Finalizado" (${messageIdOriginal})`);
-        }
 
+            await gmail.users.messages.send({
+                userId: 'me',
+                requestBody: {
+                    raw,
+                    threadId
+                }
+            });
+
+            console.log(`✅ Resposta enviada para ${sender} na thread ${threadId}`);
+
+            // 7️⃣ Mover a última mensagem da thread para "Finalizado"
+            const finalizadoLabel = labels.find(l => l.name === 'Finalizado');
+            if (finalizadoLabel) {
+                await gmail.users.messages.modify({
+                    userId: 'me',
+                    id: messageIdOriginal,
+                    requestBody: { addLabelIds: [finalizadoLabel.id] }
+                });
+                console.log(`📌 E-mail original movido para "Finalizado" (${messageIdOriginal})`);
+            }
+
+        }
 
     } catch (err) {
         console.error('Erro ao enviar e-mails CSAT:', err);
