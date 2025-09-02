@@ -11,19 +11,33 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 })
 
+import { saveEmailToMongo, checkIfFeedbackExists } from './mongodb.js';
+
 app.get('/feedback', async (req, res) => {
     try {
-        const { nota, sender, subject, body } = req.query;
-        if (!nota || !sender ) return res.status(400).send('Parâmetros inválidos');
+        const { nota, sender, subject, body, threadId } = req.query;
+        if (!nota || !sender || !threadId) return res.status(400).send('Parâmetros inválidos');
 
         const subjectSafe = subject || "Sem assunto";
         const bodySafe = body || "Sem conteúdo";
+
+        // ✅ Verifica se já existe feedback para esse threadId
+        const existing = await checkIfFeedbackExists(threadId);
+
+        if (existing) {
+            console.log('⚠️ Feedback já registrado para este atendimento.');
+            return res.status(200).send(`
+                <h2>Feedback já registrado 💡</h2>
+                <p>Você já avaliou esse atendimento. Obrigado!</p>
+            `);
+        }
 
         // ✅ Salva no banco se ainda não existe
         await saveEmailToMongo({
             sender,
             subject: subjectSafe,
             body: bodySafe,
+            threadId,
             nota: Number(nota),
             date: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false })
         });
@@ -39,6 +53,7 @@ app.get('/feedback', async (req, res) => {
         res.status(500).send('Erro ao processar o feedback');
     }
 });
+
 
 app.post('/send-csat', async (req, res) => {
     try {
