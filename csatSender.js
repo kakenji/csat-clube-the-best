@@ -83,10 +83,17 @@ export async function sendCSATEmails(labelName = 'csat') {
                 format: 'full'
             });
         }
+        let lastMessage;
+        let headers;
 
-        const messages = resThreads.data.messages;
-        const lastMessage = messages[messages.length - 1]; // última mensagem
-        const headers = lastMessage.payload.headers;
+        const messages = resThreads.data.messages || [];
+        if(messages.length > 0){
+            lastMessage = messages[messages.length - 1]; // última mensagem
+            headers = lastMessage.payload.headers;
+        } else {
+            console.log('Thread sem mensagens, ignorando...');
+            return;
+        }
 
         const sender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
         const subject = headers.find(h => h.name === 'Subject')?.value || '(Sem assunto)';
