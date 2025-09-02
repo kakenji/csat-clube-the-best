@@ -21,11 +21,31 @@ async function connectDB() {
 
 export async function saveEmailToMongo(email) {
     const database = await connectDB();
-    const exists = await collection.findOne({ sender, subject, nota });
-    if (exists) return;
-    const collection = database.collection('csat'); // sua "tabela"
+    const collection = database.collection('csat'); // define antes de usar
+
+    const exists = await collection.findOne({
+        sender: email.sender,
+        subject: email.subject,
+        nota: email.nota
+    });
+
+    if (exists) {
+        console.log('⚠️ Feedback duplicado detectado, ignorando...');
+        return;
+    }
+
     await collection.insertOne(email);
+    console.log('✅ Feedback salvo no MongoDB');
 }
+
+
+// export async function saveEmailToMongo(email) {
+//     const database = await connectDB();
+//     const exists = await collection.findOne({ sender, subject, nota });
+//     if (exists) return;
+//     const collection = database.collection('csat'); // sua "tabela"
+//     await collection.insertOne(email);
+// }
 
 // export async function checkIfFeedbackExists(threadId) {
 //     const database = await connectDB();
