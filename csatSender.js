@@ -159,7 +159,10 @@ export async function sendCSATEmails(labelName = 'csat') {
             await gmail.users.messages.modify({
                 userId: 'me',
                 id: messageIdOriginal,
-                requestBody: { addLabelIds: [finalizadoLabel.id] }
+                requestBody: { 
+                    addLabelIds: [finalizadoLabel.id],
+                    removeLabelIds: [label.id] 
+                }
             });
             console.log(`📌 E-mail original movido para "Finalizado" (${messageIdOriginal})`);
 
