@@ -120,6 +120,17 @@ export async function sendCSATEmails(labelName = 'csat') {
             });
 
             console.log(`✅ Mensagem enviada para ${sender}`);
+
+            // 7️⃣ Mover para "Finalizado"
+            const finalizadoLabel = labels.find(l => l.name.toLowerCase() === 'finalizado');
+            if (finalizadoLabel) {
+                await gmail.users.messages.modify({
+                    userId: 'me',
+                    id: messageId,
+                    requestBody: { addLabelIds: [finalizadoLabel.id] }
+                });
+                console.log(`📌 E-mail movido para "Finalizado" (${messageId})`);
+            }
         }
 
     } catch (err) {
@@ -128,4 +139,4 @@ export async function sendCSATEmails(labelName = 'csat') {
 }
 
 // Executa
-// sendCSATEmails('csat');
+sendCSATEmails('csat');

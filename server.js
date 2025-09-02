@@ -3,7 +3,7 @@ import express from 'express';
 import { saveEmailToMongo } from './mongodb.js';
 import { sendCSATEmails } from './csatSender.js';
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3333;
 
 const app = express();
 
@@ -14,9 +14,18 @@ app.get('/', (req, res) => {
 app.get('/feedback', async (req, res) => {
     try {
         const { nota, sender, subject, body } = req.query;
-        if (!nota || !sender || !subject) return res.status(400).send('Parâmetros inválidos');
+        if (!nota || !sender) return res.status(400).send('Parâmetros inválidos');
 
-        await saveEmailToMongo({ sender, subject, body, date: new Date(), nota: Number(nota) });
+        const subjectSafe = subject || "Sem assunto";
+        const bodySafe = body || "Sem conteúdo";
+
+        await saveEmailToMongo({ 
+            sender, 
+            subject: subjectSafe, 
+            body: bodySafe, 
+            date: new Date(), 
+            nota: Number(nota) 
+        });
         console.log('Paramtros recebidos: ' + sender + subject)
 
         // Página de agradecimento
