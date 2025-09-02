@@ -84,7 +84,7 @@ export async function sendCSATEmails(labelName = 'csat') {
             });
         }
 
-        const messages = resThread.data.messages;
+        const messages = resThreads.data.messages;
         const lastMessage = messages[messages.length - 1]; // última mensagem
         const headers = lastMessage.payload.headers;
 
