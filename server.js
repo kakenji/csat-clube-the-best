@@ -1,6 +1,6 @@
 // server.js
 import express from 'express';
-import { saveEmailToMongo } from './mongodb.js';
+import { checkIfFeedbackExists, saveEmailToMongo } from './mongodb.js';
 import { sendCSATEmails } from './csatSender.js';
 
 const PORT = process.env.PORT || 3333;
@@ -14,18 +14,13 @@ app.get('/', (req, res) => {
 app.get('/feedback', async (req, res) => {
     try {
         const { nota, sender, subject, body, threadId } = req.query;
-        if (!nota || !sender) return res.status(400).send('Parâmetros inválidos');
+        if (!nota || !sender || !threadId ) return res.status(400).send('Parâmetros inválidos');
 
         const subjectSafe = subject || "Sem assunto";
         const bodySafe = body || "Sem conteúdo";
 
         // ✅ Verifica se já existe feedback para esse atendimento
-        const existing = await saveEmailToMongo.findOne({
-            threadId,
-            sender,
-            subject: subjectSafe,
-            body: bodySafe
-        });
+        const existing = await checkIfFeedbackExists(threadId);
 
         if (existing) {
             console.log('⚠️ Feedback já registrado para este atendimento.');
@@ -40,9 +35,9 @@ app.get('/feedback', async (req, res) => {
             sender,
             subject: subjectSafe,
             body: bodySafe,
-            date: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false }),
             threadId,
-            nota: Number(nota)
+            nota: Number(nota),
+            date: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false })
         });
 
         console.log('✅ Feedback salvo para:', sender, subjectSafe);
