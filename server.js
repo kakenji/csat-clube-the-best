@@ -13,22 +13,40 @@ app.get('/', (req, res) => {
 
 app.get('/feedback', async (req, res) => {
     try {
-        const { nota, sender, subject, body } = req.query;
+        const { nota, sender, subject, body, threadId } = req.query;
         if (!nota || !sender) return res.status(400).send('Parâmetros inválidos');
 
         const subjectSafe = subject || "Sem assunto";
         const bodySafe = body || "Sem conteúdo";
 
-        await saveEmailToMongo({ 
-            sender, 
-            subject: subjectSafe, 
-            body: bodySafe, 
-            date: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false }),
-            nota: Number(nota) 
+        // ✅ Verifica se já existe feedback para esse atendimento
+        const existing = await saveEmailToMongo.findOne({
+            threadId,
+            sender,
+            subject: subjectSafe,
+            body: bodySafe
         });
-        console.log('Paramtros recebidos: ' + sender + subject)
 
-        // Página de agradecimento
+        if (existing) {
+            console.log('⚠️ Feedback já registrado para este atendimento.');
+            return res.status(200).send(`
+                <h2>Feedback já registrado 💡</h2>
+                <p>Você já avaliou esse atendimento. Obrigado!</p>
+            `);
+        }
+
+        // ✅ Salva no banco se ainda não existe
+        await saveEmailToMongo({
+            sender,
+            subject: subjectSafe,
+            body: bodySafe,
+            date: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false }),
+            threadId,
+            nota: Number(nota)
+        });
+
+        console.log('✅ Feedback salvo para:', sender, subjectSafe);
+
         res.send(`
             <h2>Obrigado pelo seu feedback! 💛</h2>
             <p>Sua avaliação foi registrada com sucesso.</p>
@@ -39,14 +57,6 @@ app.get('/feedback', async (req, res) => {
     }
 });
 
-app.post('/send-csat', async (req, res) => {
-    try {
-        await sendCSATEmails('csat');
-        res.send('CSAT emails enviados!');
-    } catch (err) {
-        res.status(500).send('Erro ao enviar CSAT emails');
-    }
-});
 
 
 app.listen(PORT, () => console.log('Servidor rodando na porta 3333'));
