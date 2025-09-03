@@ -11,33 +11,25 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 })
 
-app.get('/feedback', async (req, res) => {
-    try {
-        const { nota, sender, subject, body } = req.query;
-        if (!nota || !sender) return res.status(400).send('Parâmetros inválidos');
+app.get("/feedback", async (req, res) => {
+  const { token } = req.query;
 
-        const subjectSafe = subject || "Sem assunto";
-        const bodySafe = body || "Sem conteúdo";
+  const doc = await useToken(token);
+  if (!doc) {
+    return res.status(400).send("⚠️ Link inválido ou já utilizado.");
+  }
 
-        await saveEmailToMongo({
-            sender,
-            subject: subjectSafe,
-            body: bodySafe,
-            nota: Number(nota),
-            date: new Date().toLocaleString('pt-BR', {
-                timeZone: 'America/Sao_Paulo',
-                hour12: false
-            })
-        });
+  // aqui é o clique real → salva feedback no banco
+  await saveEmailToMongo({
+    nota: doc.nota,
+    sender: doc.sender,
+    subject: doc.subject,
+    body: doc.body,
+    uniqueId: doc.uniqueId,
+    token: doc.token
+  });
 
-        res.send(`
-            <h2>Obrigado pelo seu feedback! 💛</h2>
-            <p>Sua avaliação foi registrada com sucesso.</p>
-        `);
-    } catch (err) {
-        console.error('Erro ao salvar feedback:', err);
-        res.status(500).send('Erro ao processar o feedback');
-    }
+  res.send("✅ Avaliação registrada com sucesso! Obrigado pelo seu feedback!");
 });
 
 

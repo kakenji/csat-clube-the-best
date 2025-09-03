@@ -1,7 +1,30 @@
 import { google } from 'googleapis';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
-import { buildCSATLinks } from './utils.js';
+// import { buildCSATLinks } from './utils.js';
+import crypto from "crypto";
+import { saveTokenToMongo } from "./mongodb.js"; // você cria essa função
+
+function generateToken() {
+  return crypto.randomBytes(16).toString("hex");
+}
+
+async function buildCSATLinks(sender, safeSubject, safeBody, uniqueId) {
+  const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
+
+  // Gera um token por link
+  const links = await Promise.all(labelsCSAT.map(async (label, i) => {
+    const token = generateToken();
+
+    // salva o token como "pendente"
+    await saveTokenToMongo({ token, usado: false, nota: i + 1, sender, subject: safeSubject, body: safeBody, uniqueId });
+
+    const url = `${SERVER_URL}/feedback?token=${token}`;
+    return `<a href="${url}">${label}</a>`;
+  }));
+
+  return links;
+}
 
 const uniqueId = uuidv4();
 
@@ -127,7 +150,7 @@ export async function sendCSATEmails(labelName = 'csat') {
             const safeSubject = subject.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
             const safeBody = body.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
 
-            const links = buildCSATLinks(sender, safeSubject, safeBody, uniqueId);
+            const links = await buildCSATLinks(sender, safeSubject, safeBody, uniqueId);
 
             // const links = [];
             // const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
