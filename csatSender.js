@@ -150,18 +150,13 @@ export async function sendCSATEmails(labelName = 'csat') {
             const safeSubject = subject.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
             const safeBody = body.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
 
-            const token = generateToken();
+            const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
 
-            // Salva token no banco como "pendente"
-            await saveTokenToMongo({ 
-            token, 
-            usado: false, 
-            sender, 
-            subject: safeSubject, 
-            body: safeBody, 
-            uniqueId 
-});
-            const links = await buildCSATLinks(sender, safeSubject, safeBody, uniqueId);
+            // Cada link aponta para GET /feedback com a nota
+            const links = labelsCSAT.map((label, i) => {
+            return `<a href="${SERVER_URL}/feedback?nota=${i+1}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(safeSubject)}&body=${encodeURIComponent(safeBody)}&uniqueId=${uniqueId}">${label}</a>`;
+            });
+            // const links = await buildCSATLinks(sender, safeSubject, safeBody, uniqueId);
 
             // const links = [];
             // const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];

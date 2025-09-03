@@ -12,28 +12,31 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 })
 
-app.get("/feedback", async (req, res) => {
-  const { token } = req.query;
+app.get("/feedback", (req, res) => {
+  const { nota, sender, subject, body, uniqueId } = req.query;
 
-  const doc = await useToken(token);
-  if (!doc) {
-    return res.status(400).send("⚠️ Link inválido ou já utilizado.");
-  }
-
-  // aqui é o clique real → salva feedback no banco
-  await saveEmailToMongo({
-    nota: doc.nota,
-    sender: doc.sender,
-    subject: doc.subject,
-    body: doc.body,
-    uniqueId: doc.uniqueId,
-    token: doc.token
-  });
-
-  res.send("✅ Avaliação registrada com sucesso! Obrigado pelo seu feedback!");
+  // Apenas mostra página de confirmação
+  res.send(`
+    <h1>Obrigado por avaliar!</h1>
+    <p>Você selecionou a nota: <strong>${nota}</strong></p>
+    <form method="POST" action="/feedback">
+      <input type="hidden" name="nota" value="${nota}">
+      <input type="hidden" name="sender" value="${sender}">
+      <input type="hidden" name="subject" value="${subject}">
+      <input type="hidden" name="body" value="${body}">
+      <input type="hidden" name="uniqueId" value="${uniqueId}">
+      <button type="submit">Confirmar avaliação</button>
+    </form>
+  `);
 });
 
+app.post("/feedback", express.urlencoded({ extended: true }), async (req, res) => {
+  const { nota, sender, subject, body, uniqueId } = req.body;
 
+  await saveEmailToMongo({ nota, sender, subject, body, uniqueId });
+
+  res.send("<h1>✅ Avaliação registrada com sucesso! Obrigado pelo feedback!</h1>");
+});
 
 app.post('/send-csat', async (req, res) => {
     try {
