@@ -3,10 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri, {
-  serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true },
-  tls: true
-});
+const client = new MongoClient(uri, { tls: true });
 
 
 let dbPromise;
@@ -48,10 +45,4 @@ export async function saveEmailToMongo(email) {
 //     if (exists) return;
 //     const collection = database.collection('csat'); // sua "tabela"
 //     await collection.insertOne(email);
-// }
-
-// export async function checkIfFeedbackExists(threadId) {
-//     const database = await connectDB();
-//     const collection = database.collection('csat');
-//     return await collection.findOne({ threadId });
 // }
