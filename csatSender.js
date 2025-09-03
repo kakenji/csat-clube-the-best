@@ -90,7 +90,8 @@ export async function sendCSATEmails(labelName = 'csat') {
             const lastMessage = messages[messages.length - 1];
             const headers = lastMessage.payload.headers;
 
-            const sender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
+            const rawSender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
+            const senderEmail = rawSender.match(/<(.+?)>/)?.[1] || rawSender;
             const subject = headers.find(h => h.name === 'Subject')?.value || '(Sem assunto)';
             const messageIdOriginal = lastMessage.id;
             const threadId = lastMessage.threadId;
@@ -114,7 +115,7 @@ export async function sendCSATEmails(labelName = 'csat') {
                 Obrigado por nos ajudar a melhorar! 💛
             `;
 
-            const raw = makeBody(sender, `Re: ${subject}`, messageHTML, {
+            const raw = makeBody(senderEmail, `Re: ${subject}`, messageHTML, {
                 'In-Reply-To': headers.find(h => h.name === 'Message-ID')?.value,
                 'References': headers.find(h => h.name === 'Message-ID')?.value
             });
