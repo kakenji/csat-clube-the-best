@@ -49,4 +49,5 @@ export async function saveEmailToMongo(email) {
     });
     if (exists) return;
     await collection.insertOne(email);
+    console.log('função saveEmailToMongo chamada')
 }
