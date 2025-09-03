@@ -27,7 +27,7 @@ oauth2Client.setCredentials({
 // Cria instância do Gmail API
 const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-// Opcional: logs de tokens
+// Opcional: logs de tokenssa
 oauth2Client.on('tokens', (tokens) => {
     if(tokens.refresh_token){
         console.log('Refresh token novo gerado (não usado no Render):', tokens.refresh_token);
@@ -169,6 +169,7 @@ export async function sendCSATEmails(labelName = 'csat') {
             });
             console.log(`📌 E-mail original movido para "Finalizado" (${messageIdOriginal})`);
 
+            console.log(`🔍 Total de threads encontradas: ${threads.length}`);
 
         }
 

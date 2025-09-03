@@ -8,16 +8,19 @@ const client = new MongoClient(uri, {
   tls: true
 });
 
-let db;
+
+let dbPromise;
 
 async function connectDB() {
-    if (!db) {
-        await client.connect();
-        db = client.db("gmail_csat"); // seu banco
-        console.log("✅ Conectado ao MongoDB!");
+    if (!dbPromise) {
+        dbPromise = client.connect().then(() => {
+            console.log("✅ Conectado ao MongoDB!");
+            return client.db("gmail_csat");
+        });
     }
-    return db;
+    return dbPromise;
 }
+
 
 export async function saveEmailToMongo(email) {
     const database = await connectDB();
