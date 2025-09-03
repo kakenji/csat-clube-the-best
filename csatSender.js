@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
-import { generateFeedbackLinks } from './utils.js';
+import { buildCSATLinks } from './utils';
 
 const uniqueId = uuidv4();
 
@@ -127,12 +127,9 @@ export async function sendCSATEmails(labelName = 'csat') {
             const safeSubject = subject.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
             const safeBody = body.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
 
-            const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
+            const links = buildCSATLinks(sender, safeSubject, safeBody, uniqueId);
 
-            const links = labelsCSAT.map((label, i) => {
-                const url = `${SERVER_URL}/feedback?nota=${i + 1}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(safeSubject)}&body=${encodeURIComponent(safeBody)}&id=${uniqueId}`;
-                return `<a href="${url}">${label}</a>`;
-});
+            // const links = [];
             // const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
             // for (let i = 1; i <= 5; i++) {
             //     const url = `${SERVER_URL}/feedback?nota=${i}&sender=${encodeURIComponent(sender)}&subject=${encodeURIComponent(safeSubject)}&body=${encodeURIComponent(safeBody)}$id${uniqueId}`;
