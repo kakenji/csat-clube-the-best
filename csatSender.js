@@ -9,12 +9,6 @@ dotenv.config();
 const uniqueId = uuidv4();
 const SERVER_URL = process.env.SERVER_URL;
 
-const SCOPES = [
-    'https://www.googleapis.com/auth/gmail.readonly',
-    'https://www.googleapis.com/auth/gmail.send',
-    'https://www.googleapis.com/auth/gmail.modify'
-];
-
 const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET
@@ -50,6 +44,23 @@ function makeBody(to, subject, message, headers = {}) {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, '');
+}
+
+function extractSenderEmail(headers) {
+    const rawSender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
+    return rawSender.match(/<(.+?)>/)?.[1] || rawSender;
+}
+
+function extractBody(payload) {
+    let body = '';
+    const parts = payload.parts;
+    if (parts && parts.length > 0) {
+        const part = parts.find(p => p.mimeType === 'text/plain');
+        if (part?.body?.data) body = Buffer.from(part.body.data, 'base64').toString('utf-8');
+    } else if (payload.body?.data) {
+        body = Buffer.from(payload.body.data, 'base64').toString('utf-8');
+    }
+    return body;
 }
 
 export async function sendCSATEmails(labelName = 'csat') {
@@ -90,20 +101,11 @@ export async function sendCSATEmails(labelName = 'csat') {
             const lastMessage = messages[messages.length - 1];
             const headers = lastMessage.payload.headers;
 
-            const rawSender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
-            const senderEmail = rawSender.match(/<(.+?)>/)?.[1] || rawSender;
+            const senderEmail = extractSenderEmail(headers);
             const subject = headers.find(h => h.name === 'Subject')?.value || '(Sem assunto)';
             const messageIdOriginal = lastMessage.id;
             const threadId = lastMessage.threadId;
-
-            let body = '';
-            const parts = lastMessage.payload.parts;
-            if (parts && parts.length > 0) {
-                const part = parts.find(p => p.mimeType === 'text/plain');
-                if (part?.body?.data) body = Buffer.from(part.body.data, 'base64').toString('utf-8');
-            } else if (lastMessage.payload.body?.data) {
-                body = Buffer.from(lastMessage.payload.body.data, 'base64').toString('utf-8');
-            }
+            const body = extractBody(lastMessage.payload);
 
             const links = generateFeedbackLinks(senderEmail, subject, body, uniqueId);
 
