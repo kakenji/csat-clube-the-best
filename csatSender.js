@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
-import { buildCSATLinks } from './utils';
+import { buildCSATLinks } from './utils.js';
 
 const uniqueId = uuidv4();
 
