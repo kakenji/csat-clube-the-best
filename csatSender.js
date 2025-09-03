@@ -150,6 +150,17 @@ export async function sendCSATEmails(labelName = 'csat') {
             const safeSubject = subject.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
             const safeBody = body.replace(/\r?\n/g, ' ').replace(/&/g, 'and');
 
+            const token = generateToken();
+
+            // Salva token no banco como "pendente"
+            await saveTokenToMongo({ 
+            token, 
+            usado: false, 
+            sender, 
+            subject: safeSubject, 
+            body: safeBody, 
+            uniqueId 
+});
             const links = await buildCSATLinks(sender, safeSubject, safeBody, uniqueId);
 
             // const links = [];
