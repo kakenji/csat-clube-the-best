@@ -42,7 +42,11 @@ async function connectDB() {
 export async function saveEmailToMongo(email) {
     const database = await connectDB();
     const collection = database.collection('csat'); // sua "tabela"
-    const exists = await collection.findOne({ sender, subject, nota });
+    const exists = await collection.findOne({ 
+        sender: email.sender, 
+        subject: email.subject, 
+        nota: email.nota 
+    });
     if (exists) return;
     await collection.insertOne(email);
 }
