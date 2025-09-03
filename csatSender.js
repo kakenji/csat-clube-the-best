@@ -105,7 +105,7 @@ export async function sendCSATEmails(labelName = 'csat') {
                 body = Buffer.from(lastMessage.payload.body.data, 'base64').toString('utf-8');
             }
 
-            const links = generateFeedbackLinks(sender, subject, body, uniqueId);
+            const links = generateFeedbackLinks(senderEmail, subject, body, uniqueId);
 
             const messageHTML = `
                 Olá! 😊<br><br>
@@ -128,7 +128,7 @@ export async function sendCSATEmails(labelName = 'csat') {
                 }
             });
 
-            console.log(`✅ Resposta enviada para ${sender} na thread ${threadId}`);
+            console.log(`✅ Resposta enviada para ${senderEmail} na thread ${threadId}`);
 
             await gmail.users.messages.modify({
                 userId: 'me',
