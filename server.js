@@ -33,7 +33,20 @@ app.get("/feedback", (req, res) => {
 app.post("/feedback", express.urlencoded({ extended: true }), async (req, res) => {
   const { nota, sender, subject, body, uniqueId } = req.body;
 
-  await saveEmailToMongo({ nota, sender, subject, body, uniqueId });
+  const now = new Date();
+  
+  // Ajusta para GMT-3 (Brasília)
+  const offsetMs = -3 * 60 * 60 * 1000;
+  const brasiliaDate = new Date(now.getTime() + offsetMs);
+
+  // Formata como string legível: dd/mm/yyyy HH:mm
+  const datetime = brasiliaDate.toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    hour12: false
+  });
+
+
+  await saveEmailToMongo({ nota, sender, subject, body, uniqueId, datetime});
 
   res.send("<h1>✅ Avaliação registrada com sucesso! Obrigado pelo feedback!</h1>");
 });
