@@ -9,6 +9,17 @@ function generateToken() {
   return crypto.randomBytes(16).toString("hex");
 }
 
+function findLastCustomerMessage(messages, myEmail) {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const headers = messages[i].payload.headers;
+    const from = headers.find(h => h.name === "From")?.value || "";
+    if (!from.includes(myEmail)) {
+      return messages[i]; // última mensagem do cliente
+    }
+  }
+  return null;
+}
+
 async function buildCSATLinks(sender, safeSubject, safeBody, uniqueId) {
   const labelsCSAT = ['Péssimo 😞','Ruim 😐','Ok 🙂','Bom 😃','Ótimo 😍'];
 
@@ -127,14 +138,22 @@ export async function sendCSATEmails(labelName = 'csat') {
                 continue;
             }
 
-            const lastMessage = messages[messages.length - 1];
-            const headers = lastMessage.payload.headers;
-        
+            const myEmail = 'suporte@thebestacai.com.br';
+            const customerMessage = findLastCustomerMessage(messages, myEmail);
 
+            if(!customerMessage){
+                console.log('Nenhuma mensagem do cliente encontrada!');
+                continue;
+            }
+
+            // const lastMessage = messages[messages.length - 1];
+            // const headers = lastMessage.payload.headers;
+        
+            const headers = customerMessage.payload.headers;
             const sender = headers.find(h => h.name === 'From')?.value || 'Desconhecido';
             const subject = headers.find(h => h.name === 'Subject')?.value || '(Sem assunto)';
-            const messageIdOriginal = lastMessage.id; // para reply e label
-            const threadId = lastMessage.threadId;
+            const messageIdOriginal = customerMessage.id; // para reply e label
+            const threadId = customerMessage.threadId;
 
             // Extrair body
             let body = '';
