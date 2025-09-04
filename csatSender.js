@@ -187,7 +187,9 @@ export async function sendCSATEmails(labelName = 'csat') {
             // 5️⃣ Montar mensagem HTML
             const messageHTML = `
                 Olá! 😊<br><br>
-                Queremos saber como foi sua experiência com nosso atendimento.<br><br>
+                Queremos saber como foi sua experiência com nosso atendimento.<br>
+                ✨ Observação: sua avaliação é voltada exclusivamente ao atendimento, independente das funcionalidades do serviço.
+                <br><br>
                 Como você avalia nosso atendimento?<br>
                 ${links.join(' | ')}<br><br>
                 Obrigado por nos ajudar a melhorar! 💛
