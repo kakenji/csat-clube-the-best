@@ -192,9 +192,9 @@ export async function sendCSATEmails(labelName = 'csat') {
 
             // 7️⃣ Mover a última mensagem da thread para "Finalizado"
             
-            await gmail.users.messages.modify({
+            await gmail.users.threads.modify({
                 userId: 'me',
-                id: messageIdOriginal,
+                id: threadId,
                 requestBody: { 
                     addLabelIds: [finalizadoLabel.id],
                     removeLabelIds: [label.id] 
