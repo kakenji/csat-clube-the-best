@@ -23,12 +23,14 @@ export async function saveEmailToMongo(email) {
     const collection = database.collection('csat'); 
 
     // Evita duplicação
-    const exists = await collection.findOne({ 
-        sender: email.sender, 
-        subject: email.subject, 
-        nota: email.nota 
-    });
-    if (exists) return;
+    const exsits = await collection.findOne({ uniqueId: email.uniqueId });
+    if(exists) return;
+    // const exists = await collection.findOne({ 
+    //     sender: email.sender, 
+    //     subject: email.subject, 
+    //     nota: email.nota 
+    // });
+    // if (exists) return;
 
     await collection.insertOne(email);
     console.log('📩 Feedback salvo no MongoDB');
