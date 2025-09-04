@@ -157,12 +157,12 @@ export async function sendCSATEmails(labelName = 'csat') {
 
             // Extrair body
             let body = '';
-            const parts = lastMessage.payload.parts;
+            const parts = customerMessage.payload.parts;
             if (parts && parts.length > 0) {
                 const part = parts.find(p => p.mimeType === 'text/plain');
                 if (part?.body?.data) body = Buffer.from(part.body.data, 'base64').toString('utf-8');
-            } else if (lastMessage.payload.body?.data) {
-                body = Buffer.from(lastMessage.payload.body.data, 'base64').toString('utf-8');
+            } else if (customerMessage.payload.body?.data) {
+                body = Buffer.from(customerMessage.payload.body.data, 'base64').toString('utf-8');
             }
 
             // 4️⃣ Gerar links de feedback (sanitize para evitar múltiplos)
