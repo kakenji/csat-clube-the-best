@@ -34,14 +34,9 @@ app.post("/feedback", express.urlencoded({ extended: true }), async (req, res) =
   const { nota, sender, subject, body, uniqueId } = req.body;
 
   const now = new Date();
-  
-  // Ajusta para GMT-3 (Brasília)
-  const offsetMs = -3 * 60 * 60 * 1000;
-  const brasiliaDate = new Date(now.getTime() + offsetMs);
 
-  // Formata como string legível: dd/mm/yyyy HH:mm
-  const datetime = brasiliaDate.toLocaleString('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
+  const datetime = now.toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
     hour12: false
   });
 

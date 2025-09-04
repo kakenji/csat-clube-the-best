@@ -23,7 +23,7 @@ export async function saveEmailToMongo(email) {
     const collection = database.collection('csat'); 
 
     // Evita duplicação
-    const exsits = await collection.findOne({ uniqueId: email.uniqueId });
+    const exists = await collection.findOne({ uniqueId: email.uniqueId });
     if(exists) return;
     // const exists = await collection.findOne({ 
     //     sender: email.sender, 
