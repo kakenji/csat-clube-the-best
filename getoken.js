@@ -7,7 +7,7 @@ dotenv.config();
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  'urn:ietf:wg:oauth:2.0:oob' // redirect URI out-of-band
+  'http://localhost:3000/oauth2callback' // redirect URI out-of-band
 );
 
 // Escopos que você precisa
